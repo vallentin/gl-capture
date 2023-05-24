@@ -1,0 +1,12 @@
+[package]
+name = "gl-capture"
+version = "0.0.1"
+edition = "2021"
+description = "Capture screenshot in OpenGL"
+documentation = "https://docs.rs/gl-capture"
+keywords = ["gl", "egl", "opengl", "khronos"]
+repository = "https://github.com/vallentin/gl-capture"
+license = "MIT"
+
+[dependencies]
+gl = "0.14"
