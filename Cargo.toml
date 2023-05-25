@@ -8,6 +8,7 @@ keywords = ["gl", "egl", "opengl", "khronos"]
 categories = ["game-development", "graphics", "multimedia", "rendering"]
 repository = "https://github.com/vallentin/gl-capture"
 license = "MIT"
+readme = "README.md"
 
 [dependencies]
 gl = "0.14"
