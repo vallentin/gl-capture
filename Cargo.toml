@@ -11,3 +11,7 @@ license = "MIT"
 
 [dependencies]
 gl = "0.14"
+
+[dev-dependencies]
+glfw = "0.51"
+png = "0.17"
