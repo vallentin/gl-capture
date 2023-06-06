@@ -1,3 +1,58 @@
+//! Library for capturing screenshots in OpenGL.
+//!
+//! See [examples/basic.rs] for a complete example.
+//!
+//! ```rust
+//! # #[gl_headless::gl_headless(version = "3.3")]
+//! # fn main() {
+//! let img = unsafe { gl_capture::capture() };
+//! // img.size: (u32, u32)
+//! // img.data: Vec<capture_gl::Rgb>
+//! // Now use e.g. `png` or `image` crate to save the image data to a file
+//! # }
+//! ```
+//!
+//! Alternatively, use [`capture_into()`] to reuse the same image data, instead
+//! of reallocating on every call.
+//!
+//! ```rust
+//! # #[gl_headless::gl_headless(version = "3.3")]
+//! # fn main() {
+//! let size = (.., ..);
+//! # let size = (100, 100);
+//!
+//! let mut img = gl_capture::RgbImageData::new(size);
+//! unsafe {
+//!     gl_capture::capture_into(&mut img);
+//! }
+//! // img.size: (u32, u32)
+//! // img.data: Vec<capture_gl::Rgb>
+//! # }
+//! ```
+//!
+//! Also supports other formats, e.g. [`RgbaImageData`], [`BgrImageData`], [`BgraImageData`].
+//!
+//! When manually using `gl::ReadPixels()`, instead it is also possible to use
+//! [`read_pixels()`] or [`read_pixels_ptr()`], which performs some additional checks
+//! and setup.
+//!
+//! ```rust
+//! # #[gl_headless::gl_headless(version = "3.3")]
+//! # fn main() {
+//! let size = (.., ..);
+//! # let size = (100, 100);
+//!
+//! let format = gl_capture::CaptureFormat::Rgb;
+//! let mut data = format.allocate_pixel_data(size);
+//!
+//! unsafe {
+//!     gl_capture::read_pixels((0, 0), size, format, &mut data);
+//! }
+//! # }
+//! ```
+//!
+//! [examples/basic.rs]: https://github.com/vallentin/gl-capture/blob/master/examples/basic.rs
+
 #![forbid(elided_lifetimes_in_paths)]
 #![cfg_attr(debug_assertions, allow(dead_code, unreachable_code))]
 
@@ -12,12 +67,20 @@ use std::mem;
 
 use gl::types::GLenum;
 
+/// Same as <code>[ImageData]<[Rgba]></code>.
 pub type RgbaImageData = ImageData<Rgba>;
+/// Same as <code>[ImageData]<[Rgb]></code>.
 pub type RgbImageData = ImageData<Rgb>;
 
+/// Same as <code>[ImageData]<[Bgra]></code>.
 pub type BgraImageData = ImageData<Bgra>;
+/// Same as <code>[ImageData]<[Bgr]></code>.
 pub type BgrImageData = ImageData<Bgr>;
 
+/// On Windows the Microsoft GDI pixel layout is `BGRA`,
+/// which [NVIDIA graphics cards are built to match][NVIDIA].
+///
+/// [NVIDIA]: https://http.download.nvidia.com/developer/Papers/2005/Fast_Texture_Transfers/Fast_Texture_Transfers.pdf
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum CaptureFormat {
     Rgba,
@@ -80,8 +143,10 @@ where
     img.flip_vertically();
 }
 
-/// Panics if the length of pixel `data`, is not
-/// at least `w * h * format.`[`byte_size()`](CaptureFormat::byte_size)
+/// # Panics
+///
+/// Panics if <code>data.[len()](slice::len)</code> is not at least
+/// <code>w * h * format.[channel_count()](CaptureFormat::channel_count)</code>.
 pub unsafe fn read_pixels(
     (x, y): (u32, u32),
     (w, h): (u32, u32),

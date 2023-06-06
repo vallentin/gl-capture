@@ -14,5 +14,6 @@ readme = "README.md"
 gl = "0.14"
 
 [dev-dependencies]
+gl-headless = "0.2"
 glfw = "0.51"
 png = "0.17"
